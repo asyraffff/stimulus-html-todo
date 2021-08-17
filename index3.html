@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>StimulusJs HTML Todo List</title>
+    <script src="https://unpkg.com/stimulus/dist/stimulus.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.min.js" integrity="sha384-cn7l7gDp0eyniUwwAZgrzD06kc/tftFf19TOAs2zVinnD/C7E91j9yyk5//jjpt/" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <script>
+    (() => {
+      const application = Stimulus.Application.start()
+
+      application.register("create", class extends Stimulus.Controller {
+        static get targets() {
+          return ["task", "list", "listElement"]
+        }
+
+        connect() {
+          const tasks = JSON.parse(localStorage.tasks||'[]');
+          tasks.forEach(t => this.appendToList(t));
+        }
+
+        add(event) {
+            event.preventDefault();
+            if (!this.taskTarget.value) {
+                return;
+            }
+
+            this.addTaskToStorage();
+            this.appendToList({name: this.taskTarget.value, done: false});
+            this.taskTarget.value = '';
+        }
+
+        toggleCheck(event) {
+            const index = this.list.map(i => i.querySelector('input')).indexOf(event.target)
+            if (index === -1) {
+                return;
+            }
+
+            this.list[index].classList.toggle('checked');
+            const tasks = JSON.parse(localStorage.tasks);
+            tasks[index].done = true;
+            localStorage.tasks = JSON.stringify(tasks);
+        }
+
+        addTaskToStorage() {
+            localStorage.tasks = JSON.stringify([
+                ...JSON.parse(localStorage.tasks||'[]'),
+                {
+                    name: this.taskTarget.value,
+                    done: false,
+                },
+            ]);
+        }
+
+        appendToList(task) {
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.className = 'form-check-input';
+            input.checked = task.done;
+            input.id = `todo-${this.list.length + 1}`;
+            input.setAttribute('data-action', 'change->todo--create#toggleCheck');
+            const label = document.createElement('label');
+            label.innerText = task.name;
+            label.htmlFor = input.id;
+            label.className = 'form-check-label';
+            const wrapper = document.createElement('div')
+            wrapper.className = 'form-check';
+            wrapper.append(input, label);
+            const item = document.createElement('div');
+            item.className = 'list-group-item d-flex justify-content-between align-items-start';
+            item.setAttribute('data-todo--create-target', 'taskElement');
+            item.setAttribute('data-todo--create-checked-class', 'checked');
+            if (task.done) {
+                item.classList.toggle('checked');
+            }
+            item.append(wrapper);
+
+            this.listTarget.appendChild(item);
+        }
+
+        get list() {
+            return this.taskElementTargets;
+        }
+
+        clear() {
+            localStorage.clear();
+            this.listTarget.innerHTML = '';
+        }
+      })
+
+      // application.register("hello", class extends Stimulus.Controller {
+      //   static get targets() {
+      //     return [ "name", "output" ]
+      //   }
+      //
+      //   greet() {
+      //     this.outputTarget.textContent =
+      //       `Hello, ${this.nameTarget.value}!`
+      //   }
+      // })
+    })()
+  </script>
+
+  <style>
+    .checked label {
+      text-decoration: line-through;
+    }
+  </style>
+  </head>
+  <body>
+
+    <div class="container" data-controller="create">
+      <form data-action="create#add">
+        <div class="mb-3">
+          <label for="task" class="form-label">Task</label>
+          <input type="text" id="task" class="form-control" data-create-target="task">
+        </div>
+
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary">Add Task</button>
+          <button type="button" class="btn btn-secondary" data-action="create#clear">Clear the task list</button>
+        </div>
+      </form>
+
+      <h2>List of tasks to be performed</h2>
+      <div class="list-group" data-create-target="list"></div>
+    </div>
+
+    <!-- <div data-controller="hello">
+        <input data-hello-target="name" type="text">
+
+        <button data-action="click->hello#greet">
+          Greet
+        </button>
+
+        <span data-hello-target="output">
+        </span>
+   </div> -->
+  </body>
+</html>

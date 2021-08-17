@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <script src="https://unpkg.com/stimulus/dist/stimulus.umd.js"></script>
+  <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.js"></script>
+  <script>
+    (() => {
+      const application = Stimulus.Application.start()
+
+      application.register("todolist", class extends Stimulus.Controller {
+        static get targets(){
+          return [ "todo", "list" ]
+        }
+
+        addCloseButtonOnLiItem() {
+          var button = document.createElement("button");
+          var icon = document.createElement("icon");
+          icon.setAttribute("class", "material-icons");
+          icon.setAttribute("aria-hidden", "true");
+          icon.innerHTML = "delete";
+          button.setAttribute("class", "mdc-button");
+          button.setAttribute("data-mdc-auto-init", "MDCRipple");
+          button.setAttribute("data-action", "click->todolist#delete");
+          button.appendChild(icon);
+          return button;
+        }
+
+        delete(event) {
+          let item = event.target.parentNode.parentNode;
+          let parent = item.parentNode;
+          parent.removeChild(item);
+        }
+
+        add(event) {
+          console.log(event);
+          if((event.charCode == 13 || event.type === "click")&& this.todo && this.todo !== ''){
+          var li = document.createElement("li");
+          li.setAttribute("data-mdc-auto-init", "MDCRipple");
+          li.setAttribute("class", "mdc-list-item");
+          li.appendChild(document.createTextNode(this.todo));
+          var space = document.createElement("span");
+          space.setAttribute("class", "mdc-list-item__meta");
+          li.appendChild(space);
+          li.appendChild(this.addCloseButtonOnLiItem());
+          this.listTarget.appendChild(li);
+        }
+        }
+
+        get todo() {
+          return this.todoTarget.value
+        }
+
+        get list() {
+          return this.listTarget
+        }
+      })
+    })()
+  </script>
+</head>
+<body>
+  <div data-controller="todolist">
+  <header class="mdc-top-app-bar" data-mdc-auto-init="MDCTopAppBar">
+    <div class="mdc-top-app-bar__row">
+      <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+        <span class="mdc-top-app-bar__title">Todo List</span>
+      </section>
+    </div>
+  </header>
+  <div style="padding: 100px 100px;">
+    <div class="mdc-text-field mdc-text-field--outlined" data-mdc-auto-init="MDCTextField" data-action="keypress->todolist#add">
+      <input data-target="todolist.todo" type="text" class="mdc-text-field__input">
+      <div class="mdc-notched-outline">
+        <div class="mdc-notched-outline__leading"></div>
+        <div class="mdc-notched-outline__notch">
+          <label class="mdc-floating-label" for="greeter">Type to do...</label>
+      </div>
+      <div class="mdc-notched-outline__trailing"></div>
+      </div>
+    </div>
+    <button class="mdc-button mdc-elevation--z1" data-mdc-auto-init="MDCRipple" data-action="click->todolist#add">
+      <span class="mdc-button__label">Add</span>
+      <i class="material-icons mdc-button__icon" aria-hidden="true">favorite</i>
+    </button>
+    </div>
+  <ul data-target="todolist.list" class="mdc-list" data-mdc-auto-init="MDCList">
+  </ul>
+</body>
+</html>
+<script type="text/javascript">
+  window.mdc.autoInit();
+</script>
